@@ -1,0 +1,98 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { uniqueSlug } from '../common/slug';
+import {
+  CreateProductDto,
+  ProductQueryDto,
+  UpdateProductDto,
+} from './products.dto';
+import { Product, ProductDocument } from './product.schema';
+
+function fold(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .replace(/đ/gi, 'd')
+    .toLowerCase();
+}
+
+@Injectable()
+export class ProductsService {
+  constructor(
+    @InjectModel(Product.name)
+    private readonly productModel: Model<ProductDocument>,
+  ) {}
+
+  async findAll(query: ProductQueryDto) {
+    const filter: Record<string, unknown> = {};
+    if (query.category) {
+      filter.category = query.category;
+    }
+    if (query.featured !== undefined) {
+      filter.isFeatured = query.featured;
+    }
+    const found = this.productModel.find(filter);
+    const products =
+      query.sort === 'price_asc'
+        ? await found.sort({ price: 1 }).lean()
+        : query.sort === 'price_desc'
+          ? await found.sort({ price: -1 }).lean()
+          : await found.sort({ createdAt: -1 }).lean();
+    if (!query.search) return products;
+    const needle = fold(query.search.trim());
+    return products.filter((product) => fold(product.name).includes(needle));
+  }
+
+  async findBySlug(slug: string) {
+    const bySlug = await this.productModel.findOne({ slug }).lean();
+    if (bySlug) return bySlug;
+    if (/^[a-f\d]{24}$/i.test(slug)) {
+      const byId = await this.productModel.findById(slug).lean();
+      if (byId) return byId;
+    }
+    throw new NotFoundException('Không tìm thấy sản phẩm.');
+  }
+
+  async findById(id: string) {
+    const product = await this.productModel.findById(id);
+    if (!product) {
+      throw new NotFoundException('Không tìm thấy sản phẩm.');
+    }
+    return product;
+  }
+
+  async create(dto: CreateProductDto) {
+    const slug = await uniqueSlug(
+      async (value) => Boolean(await this.productModel.exists({ slug: value })),
+      dto.name,
+    );
+    return this.productModel.create({ ...dto, slug });
+  }
+
+  async update(id: string, dto: UpdateProductDto) {
+    const product = await this.findById(id);
+    if (dto.name && dto.name !== product.name) {
+      product.slug = await uniqueSlug(
+        async (value) =>
+          Boolean(
+            await this.productModel.exists({
+              slug: value,
+              _id: { $ne: product._id },
+            }),
+          ),
+        dto.name,
+      );
+    }
+    Object.assign(product, dto);
+    return product.save();
+  }
+
+  async remove(id: string) {
+    const product = await this.productModel.findByIdAndDelete(id);
+    if (!product) {
+      throw new NotFoundException('Không tìm thấy sản phẩm.');
+    }
+    return { message: 'Đã xóa sản phẩm.' };
+  }
+}
