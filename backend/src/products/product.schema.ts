@@ -36,6 +36,9 @@ export class Product {
 
   @Prop({ default: false })
   isFeatured: boolean;
+
+  @Prop({ default: true, index: true })
+  isPublished: boolean;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);

@@ -2,6 +2,25 @@
 
 Shop đèn gỗ thủ công bằng tiếng Việt. Dự án gồm backend NestJS + MongoDB và frontend React + Vite + Tailwind CSS.
 
+## Chạy nhanh (3 terminal)
+
+```bash
+# 1) MongoDB (Docker, map ra cổng 27018)
+docker start dgs-mongo || docker run -d --name dgs-mongo -p 127.0.0.1:27018:27017 mongo:8
+
+# 2) Backend -> http://localhost:3000/api
+cd backend && npm run start:dev
+
+# 3) Frontend -> http://localhost:5173  (terminal khác)
+cd frontend && npm run dev
+```
+
+Kiểm tra backend sống: `curl http://localhost:3000/api/health` → `{"ok":true,...}`
+
+Đăng nhập admin tại `http://localhost:5173/admin` bằng `ADMIN_EMAIL` / `ADMIN_PASSWORD` trong `backend/.env`.
+
+> Phần **tồn kho** chưa hoàn thiện — sẽ phát triển sau. Hiện tại dùng cờ **Ẩn/Hiện** (`isPublished`) để giấu sản phẩm chưa có giá khỏi trang khách.
+
 ## Chức năng
 
 ### Khách hàng
@@ -16,7 +35,7 @@ Shop đèn gỗ thủ công bằng tiếng Việt. Dự án gồm backend NestJS
 ### Admin
 
 - Một tài khoản JWT duy nhất, tự tạo từ biến môi trường khi backend kết nối MongoDB lần đầu.
-- Quản lý sản phẩm: CRUD, nhiều ảnh, tồn kho, loại đèn và cờ nổi bật.
+- Quản lý sản phẩm: CRUD, nhiều ảnh, loại đèn, cờ nổi bật và cờ **Ẩn/Hiện** (`isPublished`). Sản phẩm đang ẩn không xuất hiện ở trang khách và trả về 404 khi truy cập trực tiếp theo slug.
 - Quản lý banner: upload Cloudinary, tối đa 5 banner hoạt động, kéo-thả để đổi thứ tự slideshow.
 - Quản lý bài viết: TipTap, chèn ảnh Cloudinary, đăng/ẩn bài.
 - Quản lý đơn: xem chi tiết và đổi trạng thái `mới` / `đang xử lý` / `đã giao` / `đã hủy`.
@@ -42,7 +61,8 @@ npm run start:dev
 Sửa các biến quan trọng trong `backend/.env`:
 
 ```env
-MONGODB_URI=mongodb://127.0.0.1:27017/den-go-sai-gon
+# 27018 nếu chạy MongoDB bằng Docker như mục "Chạy nhanh"; 27017 nếu cài mongod trực tiếp trên máy
+MONGODB_URI=mongodb://127.0.0.1:27018/den-go-sai-gon
 JWT_SECRET=mot-chuoi-bi-mat-dai-va-ngau-nhien
 ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=mat-khau-admin-manh

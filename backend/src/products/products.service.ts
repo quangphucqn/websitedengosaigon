@@ -24,8 +24,16 @@ export class ProductsService {
     private readonly productModel: Model<ProductDocument>,
   ) {}
 
-  async findAll(query: ProductQueryDto) {
-    const filter: Record<string, unknown> = {};
+  findAll(query: ProductQueryDto) {
+    return this.list(query, { isPublished: true });
+  }
+
+  findAllAdmin(query: ProductQueryDto) {
+    return this.list(query, {});
+  }
+
+  private async list(query: ProductQueryDto, base: Record<string, unknown>) {
+    const filter: Record<string, unknown> = { ...base };
     if (query.category) {
       filter.category = query.category;
     }
@@ -45,10 +53,14 @@ export class ProductsService {
   }
 
   async findBySlug(slug: string) {
-    const bySlug = await this.productModel.findOne({ slug }).lean();
+    const bySlug = await this.productModel
+      .findOne({ slug, isPublished: true })
+      .lean();
     if (bySlug) return bySlug;
     if (/^[a-f\d]{24}$/i.test(slug)) {
-      const byId = await this.productModel.findById(slug).lean();
+      const byId = await this.productModel
+        .findOne({ _id: slug, isPublished: true })
+        .lean();
       if (byId) return byId;
     }
     throw new NotFoundException('Không tìm thấy sản phẩm.');

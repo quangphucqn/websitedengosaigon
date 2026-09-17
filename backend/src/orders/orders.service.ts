@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MailService } from '../mail/mail.service';
@@ -39,6 +43,9 @@ export class OrdersService {
       const product = await this.productModel.findById(item.productId);
       if (!product) {
         throw new BadRequestException('Có sản phẩm không còn tồn tại.');
+      }
+      if (!product.isPublished) {
+        throw new BadRequestException('Có sản phẩm tạm ngừng bán.');
       }
       snapshots.push({
         productId: product._id.toString(),

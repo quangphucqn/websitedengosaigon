@@ -12,7 +12,7 @@ export function AdminProductsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api<Product[]>('/products')
+    api<Product[]>('/products/admin/all')
       .then(setProducts)
       .catch((err: unknown) => setError(err instanceof Error ? err.message : 'Không thể tải sản phẩm.'))
       .finally(() => setLoading(false))
@@ -39,7 +39,7 @@ export function AdminProductsPage() {
       </header>
       {loading ? <Loading /> : error ? <ErrorMessage message={error} /> : (
         <table className="admin-table">
-          <thead><tr><th>Sản phẩm</th><th>Loại</th><th>Giá</th><th>Kho</th><th></th></tr></thead>
+          <thead><tr><th>Sản phẩm</th><th>Loại</th><th>Giá</th><th>Kho</th><th>Trạng thái</th><th></th></tr></thead>
           <tbody>
             {products.map((product) => (
               <tr key={product._id}>
@@ -55,6 +55,7 @@ export function AdminProductsPage() {
                 <td>{categoryLabel[product.category]}</td>
                 <td>{formatMoney(product.price)}</td>
                 <td>{product.stock}</td>
+                <td><span className="tag">{product.isPublished ? 'Đang hiển thị' : 'Đang ẩn'}</span></td>
                 <td className="table-actions">
                   <Link to={`/admin/san-pham/${product._id}`} aria-label="Sửa"><Pencil size={16} /></Link>
                   <button type="button" onClick={() => remove(product)} aria-label="Xóa"><Trash2 size={16} /></button>

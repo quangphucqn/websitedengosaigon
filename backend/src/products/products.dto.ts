@@ -12,6 +12,7 @@ const productBody = z.object({
   category: z.enum(PRODUCT_CATEGORIES),
   stock: z.coerce.number().int().min(0).default(0),
   isFeatured: z.coerce.boolean().optional().default(false),
+  isPublished: z.coerce.boolean().optional().default(true),
 });
 
 export const createProductSchema = productBody;

@@ -18,6 +18,7 @@ export interface Product {
   category: ProductCategory
   stock: number
   isFeatured: boolean
+  isPublished: boolean
   createdAt: string
 }
 

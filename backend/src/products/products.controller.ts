@@ -32,6 +32,18 @@ export class ProductsController {
     return this.productsService.findAll(query);
   }
 
+  @Get('admin/all')
+  findAllAdmin(
+    @Query(new ZodValidationPipe(productQuerySchema)) query: ProductQueryDto,
+  ) {
+    return this.productsService.findAllAdmin(query);
+  }
+
+  @Get('admin/:id')
+  findOneAdmin(@Param('id') id: string) {
+    return this.productsService.findById(id);
+  }
+
   @Public()
   @Get(':slug')
   findOne(@Param('slug') slug: string) {

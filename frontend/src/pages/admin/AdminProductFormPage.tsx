@@ -14,6 +14,7 @@ const schema = z.object({
   category: z.enum(['den-ban', 'den-treo', 'den-dung', 'den-ngu']),
   stock: z.coerce.number().int().min(0),
   isFeatured: z.boolean(),
+  isPublished: z.boolean(),
 })
 
 type FormInput = z.infer<typeof schema>
@@ -26,12 +27,12 @@ export function AdminProductFormPage() {
   const [error, setError] = useState('')
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormInput>({
     resolver: zodResolver(schema),
-    defaultValues: { name: '', description: '', price: 0, category: 'den-ban', stock: 0, isFeatured: false },
+    defaultValues: { name: '', description: '', price: 0, category: 'den-ban', stock: 0, isFeatured: false, isPublished: true },
   })
 
   useEffect(() => {
     if (!id) return
-    api<Product>(`/products/${id}`).then((product) => {
+    api<Product>(`/products/admin/${id}`).then((product) => {
       reset({
         name: product.name,
         description: product.description,
@@ -39,6 +40,7 @@ export function AdminProductFormPage() {
         category: product.category,
         stock: product.stock,
         isFeatured: product.isFeatured,
+        isPublished: product.isPublished,
       })
       setImages(product.images)
     }).catch((err: unknown) => setError(err instanceof Error ? err.message : 'Không thể tải sản phẩm.'))
@@ -78,6 +80,7 @@ export function AdminProductFormPage() {
           <label>Loại<select {...register('category')}><option value="den-ban">Đèn bàn</option><option value="den-treo">Đèn treo</option><option value="den-dung">Đèn đứng</option><option value="den-ngu">Đèn ngủ</option></select></label>
         </div>
         <label className="checkbox"><input type="checkbox" {...register('isFeatured')} /> Hiện ở mục sản phẩm nổi bật</label>
+        <label className="checkbox"><input type="checkbox" {...register('isPublished')} /> Hiển thị trên cửa hàng (bỏ chọn để ẩn sản phẩm chưa có giá)</label>
         <fieldset>
           <legend>Ảnh sản phẩm</legend>
           <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => onUpload(event.target.files)} />
