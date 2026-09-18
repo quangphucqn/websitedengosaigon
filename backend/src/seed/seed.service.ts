@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Banner, BannerDocument } from '../banners/banner.schema';
+import { Category, CategoryDocument } from '../categories/category.schema';
 import { Post, PostDocument } from '../posts/post.schema';
 import { Product, ProductDocument } from '../products/product.schema';
 
@@ -27,10 +28,23 @@ export class SeedService implements OnModuleInit {
     private readonly products: Model<ProductDocument>,
     @InjectModel(Banner.name) private readonly banners: Model<BannerDocument>,
     @InjectModel(Post.name) private readonly posts: Model<PostDocument>,
+    @InjectModel(Category.name)
+    private readonly categories: Model<CategoryDocument>,
   ) {}
 
   async onModuleInit() {
     if (process.env.SEED_DEMO !== 'true') return;
+
+    if (!(await this.categories.exists({}))) {
+      await this.categories.create([
+        { name: 'Đèn bàn', slug: 'den-ban', order: 0 },
+        { name: 'Đèn treo', slug: 'den-treo', order: 1 },
+        { name: 'Đèn đứng', slug: 'den-dung', order: 2 },
+        { name: 'Đèn ngủ', slug: 'den-ngu', order: 3 },
+      ]);
+      this.logger.log('Đã seed danh mục mặc định.');
+    }
+
     if (await this.products.exists({})) return;
 
     await this.products.create([

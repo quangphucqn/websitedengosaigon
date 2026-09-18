@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, SortOrder } from 'mongoose';
 import { uniqueSlug } from '../common/slug';
 import {
   CreateProductDto,
@@ -41,15 +41,28 @@ export class ProductsService {
       filter.isFeatured = query.featured;
     }
     const found = this.productModel.find(filter);
-    const products =
+    const sort: Record<string, SortOrder> =
       query.sort === 'price_asc'
-        ? await found.sort({ price: 1 }).lean()
+        ? { price: 1 }
         : query.sort === 'price_desc'
-          ? await found.sort({ price: -1 }).lean()
-          : await found.sort({ createdAt: -1 }).lean();
-    if (!query.search) return products;
-    const needle = fold(query.search.trim());
-    return products.filter((product) => fold(product.name).includes(needle));
+          ? { price: -1 }
+          : { createdAt: -1 };
+    const skip = (query.page - 1) * query.limit;
+    const [total, items] = await Promise.all([
+      this.productModel.countDocuments(filter),
+      found.sort(sort).skip(skip).limit(query.limit).lean(),
+    ]);
+    let results = items;
+    if (query.search) {
+      const needle = fold(query.search.trim());
+      results = items.filter((p) => fold(p.name).includes(needle));
+    }
+    return {
+      items: results,
+      total,
+      page: query.page,
+      totalPages: Math.ceil(total / query.limit),
+    };
   }
 
   async findBySlug(slug: string) {

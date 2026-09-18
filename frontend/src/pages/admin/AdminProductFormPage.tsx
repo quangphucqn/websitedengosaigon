@@ -4,7 +4,9 @@ import { useForm } from 'react-hook-form'
 import { useNavigate, useParams } from 'react-router-dom'
 import { z } from 'zod'
 import { api, uploadImage } from '../../api/client'
+import { FileInput, ImagePreviewGrid } from '../../components/FileInput'
 import { ErrorMessage } from '../../components/Loading'
+import { useCategories } from '../../lib/categories'
 import type { Product, ProductCategory } from '../../types'
 
 const schema = z.object({
@@ -23,6 +25,7 @@ export function AdminProductFormPage() {
   const { id } = useParams()
   const isEdit = Boolean(id)
   const navigate = useNavigate()
+  const { categories } = useCategories()
   const [images, setImages] = useState<string[]>([])
   const [error, setError] = useState('')
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormInput>({
@@ -77,14 +80,31 @@ export function AdminProductFormPage() {
         <div className="form-row">
           <label>Giá (VND)<input type="number" {...register('price')} /></label>
           <label>Tồn kho<input type="number" {...register('stock')} /></label>
-          <label>Loại<select {...register('category')}><option value="den-ban">Đèn bàn</option><option value="den-treo">Đèn treo</option><option value="den-dung">Đèn đứng</option><option value="den-ngu">Đèn ngủ</option></select></label>
+          <label>Loại đèn
+            <select {...register('category')}>
+              {(categories.length > 0 ? categories : [
+                { slug: 'den-ban', name: 'Đèn bàn' },
+                { slug: 'den-treo', name: 'Đèn treo' },
+                { slug: 'den-dung', name: 'Đèn đứng' },
+                { slug: 'den-ngu', name: 'Đèn ngủ' },
+              ] as { slug: ProductCategory; name: string }[]).map((cat) => (
+                <option key={cat.slug} value={cat.slug}>{cat.name}</option>
+              ))}
+            </select>
+          </label>
         </div>
         <label className="checkbox"><input type="checkbox" {...register('isFeatured')} /> Hiện ở mục sản phẩm nổi bật</label>
         <label className="checkbox"><input type="checkbox" {...register('isPublished')} /> Hiển thị trên cửa hàng (bỏ chọn để ẩn sản phẩm chưa có giá)</label>
         <fieldset>
           <legend>Ảnh sản phẩm</legend>
-          <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => onUpload(event.target.files)} />
-          <div className="image-list">{images.map((url) => <div key={url}><img src={url} alt="" /><button type="button" onClick={() => setImages((list) => list.filter((item) => item !== url))}>Gỡ</button></div>)}</div>
+          <FileInput
+            label="Ảnh sản phẩm (có thể chọn nhiều)"
+            accept="image/jpeg,image/png,image/webp"
+            hint="Tỉ lệ đề xuất: 1:1 (vuông). Tối thiểu 800×800 px."
+            multiple
+            onSelect={onUpload}
+          />
+          <ImagePreviewGrid urls={images} onRemove={(url) => setImages((list) => list.filter((item) => item !== url))} />
         </fieldset>
         {error && <ErrorMessage message={error} />}
         <button className="button" disabled={isSubmitting} type="submit">{isSubmitting ? 'Đang lưu…' : 'Lưu sản phẩm'}</button>

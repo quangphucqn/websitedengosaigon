@@ -4,6 +4,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { GripVertical, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { api, uploadImage } from '../../api/client'
+import { FileInput } from '../../components/FileInput'
 import { ErrorMessage, Loading } from '../../components/Loading'
 import type { Banner } from '../../types'
 
@@ -63,7 +64,19 @@ export function AdminBannersPage() {
       <form className="admin-form compact-form" onSubmit={(event) => { event.preventDefault(); void create() }}>
         <label>Tiêu đề (không bắt buộc)<input value={title} onChange={(event) => setTitle(event.target.value)} /></label>
         <label>Liên kết<input value={link} onChange={(event) => setLink(event.target.value)} /></label>
-        <label>Ảnh<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /></label>
+        <label className="file-input-label-wrap">
+          <span className="file-input-label-text">Ảnh banner</span>
+          <FileInput
+            label="Ảnh banner (tỉ lệ 12:5)"
+            accept="image/jpeg,image/png,image/webp"
+            onSelect={(files) => setFile(files?.[0] ?? null)}
+          />
+          {file && (
+            <div className="banner-preview" aria-label="Xem trước ảnh banner">
+              <img src={URL.createObjectURL(file)} alt="Xem trước" />
+            </div>
+          )}
+        </label>
         <button className="button" type="submit">Thêm banner</button>
       </form>
       {error && <ErrorMessage message={error} />}

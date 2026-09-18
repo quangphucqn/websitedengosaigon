@@ -5,6 +5,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
 import { BannersModule } from './banners/banners.module';
+import { CategoriesModule } from './categories/categories.module';
+import { ContactModule } from './contact/contact.module';
 import { JwtAuthGuard } from './common/jwt-auth.guard';
 import { MailModule } from './mail/mail.module';
 import { OrdersModule } from './orders/orders.module';
@@ -23,7 +25,9 @@ import { UploadsModule } from './uploads/uploads.module';
     }),
     AuthModule,
     ProductsModule,
+    CategoriesModule,
     BannersModule,
+    ContactModule,
     OrdersModule,
     PostsModule,
     UploadsModule,

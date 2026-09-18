@@ -13,11 +13,15 @@ export const formatDate = (value: string) =>
     timeStyle: 'short',
   }).format(new Date(value))
 
-export const categoryLabel: Record<ProductCategory, string> = {
+export const DEFAULT_CATEGORY_LABELS: Record<ProductCategory, string> = {
   'den-ban': 'Đèn bàn',
   'den-treo': 'Đèn treo',
   'den-dung': 'Đèn đứng',
   'den-ngu': 'Đèn ngủ',
+}
+
+export const categoryLabel: Record<ProductCategory, string> = {
+  ...DEFAULT_CATEGORY_LABELS,
 }
 
 export const statusLabel: Record<OrderStatus, string> = {

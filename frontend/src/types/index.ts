@@ -8,6 +8,16 @@ export const PRODUCT_CATEGORIES = [
 export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number]
 export type OrderStatus = 'moi' | 'dang_xu_ly' | 'da_giao' | 'da_huy'
 
+export interface Category {
+  _id: string
+  name: string
+  slug: string
+  description?: string
+  order: number
+  isActive: boolean
+  createdAt?: string
+}
+
 export interface Product {
   _id: string
   name: string
@@ -29,6 +39,20 @@ export interface Banner {
   link?: string
   order: number
   isActive: boolean
+}
+
+export interface ContactInfo {
+  _id?: string
+  brandName: string
+  address?: string
+  phone?: string
+  email?: string
+  zalo?: string
+  facebook?: string
+  instagram?: string
+  workingHours?: string
+  mapEmbedUrl?: string
+  updatedAt?: string
 }
 
 export interface Post {
@@ -74,4 +98,11 @@ export interface CartItem {
 export interface ApiError {
   message: string
   errors?: { field: string; message: string }[]
+}
+
+export interface PaginatedResponse<T> {
+  items: T[]
+  total: number
+  page: number
+  totalPages: number
 }

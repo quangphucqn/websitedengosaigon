@@ -1,7 +1,14 @@
 import { z } from 'zod';
 
 const nullableUrl = z
-  .union([z.string().url(), z.literal('')])
+  .union([
+    z.string().url(),
+    z
+      .string()
+      .startsWith('/')
+      .transform((v) => v || undefined),
+    z.literal(''),
+  ])
   .transform((v) => v || undefined);
 
 const bannerBody = z.object({

@@ -12,11 +12,39 @@ export class PostsService {
     @InjectModel(Post.name) private readonly postModel: Model<PostDocument>,
   ) {}
 
-  findPublished() {
-    return this.postModel
-      .find({ isPublished: true })
-      .sort({ createdAt: -1 })
-      .lean();
+  findPublished(query?: { page?: number; limit?: number }) {
+    const page = query?.page ?? 1;
+    const limit = query?.limit ?? 10;
+    const skip = (page - 1) * limit;
+    return this._list({ isPublished: true }, { page, limit, skip });
+  }
+
+  findAll(query?: { page?: number; limit?: number }) {
+    const page = query?.page ?? 1;
+    const limit = query?.limit ?? 20;
+    const skip = (page - 1) * limit;
+    return this._list({}, { page, limit, skip });
+  }
+
+  private async _list(
+    filter: Record<string, unknown>,
+    opts: { page: number; limit: number; skip: number },
+  ) {
+    const [total, items] = await Promise.all([
+      this.postModel.countDocuments(filter),
+      this.postModel
+        .find(filter)
+        .sort({ createdAt: -1 })
+        .skip(opts.skip)
+        .limit(opts.limit)
+        .lean(),
+    ]);
+    return {
+      items,
+      total,
+      page: opts.page,
+      totalPages: Math.ceil(total / opts.limit),
+    };
   }
 
   async findPublishedBySlug(slug: string) {
@@ -25,10 +53,6 @@ export class PostsService {
       .lean();
     if (!post) throw new NotFoundException('Không tìm thấy bài viết.');
     return post;
-  }
-
-  findAll() {
-    return this.postModel.find().sort({ createdAt: -1 }).lean();
   }
 
   async findById(id: string) {

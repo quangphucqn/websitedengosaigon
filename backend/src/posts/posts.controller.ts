@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { Public } from '../common/public.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
@@ -23,13 +24,24 @@ export class PostsController {
 
   @Public()
   @Get()
-  published() {
-    return this.postsService.findPublished();
+  published(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.postsService.findPublished({
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+    });
   }
 
   @Get('admin/all')
-  all() {
-    return this.postsService.findAll();
+  all(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.postsService.findAll({
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+    });
+  }
+
+  @Get('admin/:id')
+  findById(@Param('id') id: string) {
+    return this.postsService.findById(id);
   }
 
   @Public()
