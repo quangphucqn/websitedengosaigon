@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { objectIdSchema } from '../common/object-id.schema';
 import { ORDER_STATUSES } from './order.schema';
 
 const vnPhone = /^(0|\+84)(3|5|7|8|9)\d{8}$/;
@@ -18,7 +19,7 @@ export const createOrderSchema = z.object({
   items: z
     .array(
       z.object({
-        productId: z.string().min(1, 'Thiếu mã sản phẩm.'),
+        productId: objectIdSchema,
         quantity: z.coerce.number().int().min(1, 'Số lượng tối thiểu là 1.'),
       }),
     )

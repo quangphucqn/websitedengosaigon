@@ -9,6 +9,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { Public } from '../common/public.decorator';
+import { objectIdSchema } from '../common/object-id.schema';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import {
   createProductSchema,
@@ -40,7 +41,7 @@ export class ProductsController {
   }
 
   @Get('admin/:id')
-  findOneAdmin(@Param('id') id: string) {
+  findOneAdmin(@Param('id', new ZodValidationPipe(objectIdSchema)) id: string) {
     return this.productsService.findById(id);
   }
 
@@ -59,14 +60,14 @@ export class ProductsController {
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id', new ZodValidationPipe(objectIdSchema)) id: string,
     @Body(new ZodValidationPipe(updateProductSchema)) dto: UpdateProductDto,
   ) {
     return this.productsService.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', new ZodValidationPipe(objectIdSchema)) id: string) {
     return this.productsService.remove(id);
   }
 }

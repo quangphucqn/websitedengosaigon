@@ -8,6 +8,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { Public } from '../common/public.decorator';
+import { objectIdSchema } from '../common/object-id.schema';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import {
   createBannerSchema,
@@ -50,14 +51,14 @@ export class BannersController {
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id', new ZodValidationPipe(objectIdSchema)) id: string,
     @Body(new ZodValidationPipe(updateBannerSchema)) dto: UpdateBannerDto,
   ) {
     return this.bannersService.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', new ZodValidationPipe(objectIdSchema)) id: string) {
     return this.bannersService.remove(id);
   }
 }

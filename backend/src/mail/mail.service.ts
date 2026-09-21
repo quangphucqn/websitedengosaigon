@@ -11,6 +11,17 @@ function money(value: number) {
   }).format(value);
 }
 
+export function escapeHtml(value: string | number): string {
+  const entities: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  };
+  return String(value).replace(/[&<>"']/g, (character) => entities[character]);
+}
+
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
@@ -36,7 +47,7 @@ export class MailService {
     const rows = order.items
       .map(
         (item) =>
-          `<tr><td style="padding:8px 0">${item.name}</td><td align="center">${item.quantity}</td><td align="right">${money(item.price * item.quantity)}</td></tr>`,
+          `<tr><td style="padding:8px 0">${escapeHtml(item.name)}</td><td align="center">${item.quantity}</td><td align="right">${money(item.price * item.quantity)}</td></tr>`,
       )
       .join('');
     const createdAt = new Date(order.createdAt ?? Date.now()).toLocaleString(
@@ -48,10 +59,10 @@ export class MailService {
         <p><strong>Mã đơn:</strong> ${order._id.toString()}</p>
         <p><strong>Thời gian:</strong> ${createdAt}</p>
         <hr style="border:0;border-top:1px solid #e7e3da" />
-        <p><strong>Khách hàng:</strong> ${order.customerName}</p>
-        <p><strong>Điện thoại:</strong> ${order.phone}</p>
-        <p><strong>Địa chỉ:</strong> ${order.address}</p>
-        <p><strong>Ghi chú:</strong> ${order.note || 'Không có'}</p>
+        <p><strong>Khách hàng:</strong> ${escapeHtml(order.customerName)}</p>
+        <p><strong>Điện thoại:</strong> ${escapeHtml(order.phone)}</p>
+        <p><strong>Địa chỉ:</strong> ${escapeHtml(order.address)}</p>
+        <p><strong>Ghi chú:</strong> ${escapeHtml(order.note || 'Không có')}</p>
         <table width="100%" cellspacing="0" style="border-collapse:collapse;margin-top:20px">
           <thead><tr><th align="left">Sản phẩm</th><th>Số lượng</th><th align="right">Thành tiền</th></tr></thead>
           <tbody>${rows}</tbody>

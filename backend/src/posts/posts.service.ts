@@ -4,7 +4,7 @@ import { Model } from 'mongoose';
 import { uniqueSlug } from '../common/slug';
 import { sanitizePostHtml } from './html';
 import { Post, PostDocument } from './post.schema';
-import { CreatePostDto, UpdatePostDto } from './posts.dto';
+import { CreatePostDto, PostQueryDto, UpdatePostDto } from './posts.dto';
 
 @Injectable()
 export class PostsService {
@@ -12,14 +12,14 @@ export class PostsService {
     @InjectModel(Post.name) private readonly postModel: Model<PostDocument>,
   ) {}
 
-  findPublished(query?: { page?: number; limit?: number }) {
+  findPublished(query?: PostQueryDto) {
     const page = query?.page ?? 1;
     const limit = query?.limit ?? 10;
     const skip = (page - 1) * limit;
     return this._list({ isPublished: true }, { page, limit, skip });
   }
 
-  findAll(query?: { page?: number; limit?: number }) {
+  findAll(query?: PostQueryDto) {
     const page = query?.page ?? 1;
     const limit = query?.limit ?? 20;
     const skip = (page - 1) * limit;

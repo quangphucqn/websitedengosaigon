@@ -9,10 +9,13 @@ import {
   Query,
 } from '@nestjs/common';
 import { Public } from '../common/public.decorator';
+import { objectIdSchema } from '../common/object-id.schema';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import {
   createPostSchema,
+  postQuerySchema,
   type CreatePostDto,
+  type PostQueryDto,
   type UpdatePostDto,
   updatePostSchema,
 } from './posts.dto';
@@ -24,23 +27,19 @@ export class PostsController {
 
   @Public()
   @Get()
-  published(@Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.postsService.findPublished({
-      page: page ? Number(page) : undefined,
-      limit: limit ? Number(limit) : undefined,
-    });
+  published(
+    @Query(new ZodValidationPipe(postQuerySchema)) query: PostQueryDto,
+  ) {
+    return this.postsService.findPublished(query);
   }
 
   @Get('admin/all')
-  all(@Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.postsService.findAll({
-      page: page ? Number(page) : undefined,
-      limit: limit ? Number(limit) : undefined,
-    });
+  all(@Query(new ZodValidationPipe(postQuerySchema)) query: PostQueryDto) {
+    return this.postsService.findAll(query);
   }
 
   @Get('admin/:id')
-  findById(@Param('id') id: string) {
+  findById(@Param('id', new ZodValidationPipe(objectIdSchema)) id: string) {
     return this.postsService.findById(id);
   }
 
@@ -57,14 +56,14 @@ export class PostsController {
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id', new ZodValidationPipe(objectIdSchema)) id: string,
     @Body(new ZodValidationPipe(updatePostSchema)) dto: UpdatePostDto,
   ) {
     return this.postsService.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', new ZodValidationPipe(objectIdSchema)) id: string) {
     return this.postsService.remove(id);
   }
 }

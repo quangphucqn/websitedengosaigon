@@ -8,6 +8,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { Public } from '../common/public.decorator';
+import { objectIdSchema } from '../common/object-id.schema';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { createCategorySchema, updateCategorySchema } from './categories.dto';
 import { CategoriesService } from './categories.service';
@@ -37,14 +38,14 @@ export class CategoriesController {
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id', new ZodValidationPipe(objectIdSchema)) id: string,
     @Body(new ZodValidationPipe(updateCategorySchema)) dto: UpdateCategoryDto,
   ) {
     return this.categoriesService.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', new ZodValidationPipe(objectIdSchema)) id: string) {
     return this.categoriesService.remove(id);
   }
 }

@@ -1,5 +1,15 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { Public } from '../common/public.decorator';
+import { objectIdSchema } from '../common/object-id.schema';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import {
   createOrderSchema,
@@ -15,6 +25,8 @@ export class OrdersController {
 
   @Public()
   @Post()
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   create(@Body(new ZodValidationPipe(createOrderSchema)) dto: CreateOrderDto) {
     return this.ordersService.create(dto);
   }
@@ -25,13 +37,13 @@ export class OrdersController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', new ZodValidationPipe(objectIdSchema)) id: string) {
     return this.ordersService.findById(id);
   }
 
   @Patch(':id/status')
   updateStatus(
-    @Param('id') id: string,
+    @Param('id', new ZodValidationPipe(objectIdSchema)) id: string,
     @Body(new ZodValidationPipe(updateOrderStatusSchema))
     dto: UpdateOrderStatusDto,
   ) {

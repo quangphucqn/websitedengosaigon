@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { objectIdSchema } from '../common/object-id.schema';
 
 const nullableUrl = z
   .union([
@@ -21,7 +22,7 @@ const bannerBody = z.object({
 export const createBannerSchema = bannerBody;
 export const updateBannerSchema = bannerBody.partial();
 export const reorderBannersSchema = z.object({
-  ids: z.array(z.string().min(1)).min(1).max(100),
+  ids: z.array(objectIdSchema).min(1).max(100),
 });
 
 export type CreateBannerDto = z.infer<typeof createBannerSchema>;

@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { Public } from '../common/public.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { loginSchema, type LoginDto } from './auth.dto';
@@ -11,6 +12,8 @@ export class AuthController {
 
   @Public()
   @Post('login')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } })
   login(@Body(new ZodValidationPipe(loginSchema)) dto: LoginDto) {
     return this.authService.login(dto);
   }
