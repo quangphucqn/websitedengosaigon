@@ -3,6 +3,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Banner, BannerDocument } from '../banners/banner.schema';
 import { Category, CategoryDocument } from '../categories/category.schema';
+import {
+  IntroSlide,
+  IntroSlideDocument,
+} from '../intro-slides/intro-slide.schema';
 import { Post, PostDocument } from '../posts/post.schema';
 import { Product, ProductDocument } from '../products/product.schema';
 
@@ -27,6 +31,8 @@ export class SeedService implements OnModuleInit {
     @InjectModel(Product.name)
     private readonly products: Model<ProductDocument>,
     @InjectModel(Banner.name) private readonly banners: Model<BannerDocument>,
+    @InjectModel(IntroSlide.name)
+    private readonly introSlides: Model<IntroSlideDocument>,
     @InjectModel(Post.name) private readonly posts: Model<PostDocument>,
     @InjectModel(Category.name)
     private readonly categories: Model<CategoryDocument>,
@@ -43,6 +49,18 @@ export class SeedService implements OnModuleInit {
         { name: 'Đèn ngủ', slug: 'den-ngu', order: 3 },
       ]);
       this.logger.log('Đã seed danh mục mặc định.');
+    }
+
+    if (!(await this.introSlides.exists({}))) {
+      await this.introSlides.create({
+        eyebrow: 'Từ xưởng nhỏ ở Sài Gòn',
+        heading:
+          'Mỗi đường vân có một nhịp riêng. Chúng tôi giữ lại điều đó trong từng chiếc đèn.',
+        body: 'Gỗ tự nhiên, ánh sáng vàng dịu và những hình dáng vừa đủ để căn phòng có thêm một điểm dừng.',
+        order: 0,
+        isActive: true,
+      });
+      this.logger.log('Đã seed slide giới thiệu mặc định.');
     }
 
     if (await this.products.exists({})) return;

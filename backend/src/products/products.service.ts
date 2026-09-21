@@ -1,6 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, SortOrder } from 'mongoose';
+import { CategoriesService } from '../categories/categories.service';
 import { uniqueSlug } from '../common/slug';
 import {
   CreateProductDto,
@@ -22,7 +27,15 @@ export class ProductsService {
   constructor(
     @InjectModel(Product.name)
     private readonly productModel: Model<ProductDocument>,
+    private readonly categoriesService: CategoriesService,
   ) {}
+
+  private async assertActiveCategory(slug?: string) {
+    if (!slug) return;
+    if (!(await this.categoriesService.existsActiveSlug(slug))) {
+      throw new BadRequestException('Loại đèn không hợp lệ.');
+    }
+  }
 
   findAll(query: ProductQueryDto) {
     return this.list(query, { isPublished: true });
@@ -88,6 +101,7 @@ export class ProductsService {
   }
 
   async create(dto: CreateProductDto) {
+    await this.assertActiveCategory(dto.category);
     const slug = await uniqueSlug(
       async (value) => Boolean(await this.productModel.exists({ slug: value })),
       dto.name,
@@ -96,6 +110,7 @@ export class ProductsService {
   }
 
   async update(id: string, dto: UpdateProductDto) {
+    await this.assertActiveCategory(dto.category);
     const product = await this.findById(id);
     if (dto.name && dto.name !== product.name) {
       product.slug = await uniqueSlug(

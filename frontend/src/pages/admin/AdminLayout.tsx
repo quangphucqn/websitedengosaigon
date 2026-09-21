@@ -1,4 +1,4 @@
-import { FileText, Image as ImageIcon, Layers, LogOut, Mail, Package, ShoppingBag } from 'lucide-react'
+import { FilePenLine, FileText, Image as ImageIcon, Layers, LogOut, Mail, Package, ShoppingBag } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { api, clearToken, getToken } from '../../api/client'
@@ -8,6 +8,7 @@ const links = [
   { to: '/admin/san-pham', label: 'Sản phẩm', icon: Package },
   { to: '/admin/danh-muc', label: 'Loại đèn', icon: Layers },
   { to: '/admin/banner', label: 'Banner', icon: ImageIcon },
+  { to: '/admin/gioi-thieu', label: 'Giới thiệu', icon: FilePenLine },
   { to: '/admin/bai-viet', label: 'Bài viết', icon: FileText },
   { to: '/admin/lien-he', label: 'Liên hệ', icon: Mail },
   { to: '/admin/don-hang', label: 'Đơn hàng', icon: ShoppingBag },

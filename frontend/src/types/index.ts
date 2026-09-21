@@ -1,11 +1,3 @@
-export const PRODUCT_CATEGORIES = [
-  'den-ban',
-  'den-treo',
-  'den-dung',
-  'den-ngu',
-] as const
-
-export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number]
 export type OrderStatus = 'moi' | 'dang_xu_ly' | 'da_giao' | 'da_huy'
 
 export interface Category {
@@ -25,7 +17,7 @@ export interface Product {
   description: string
   price: number
   images: string[]
-  category: ProductCategory
+  category: string
   stock: number
   isFeatured: boolean
   isPublished: boolean
@@ -37,6 +29,15 @@ export interface Banner {
   imageUrl: string
   title?: string
   link?: string
+  order: number
+  isActive: boolean
+}
+
+export interface IntroSlide {
+  _id: string
+  eyebrow?: string
+  heading: string
+  body: string
   order: number
   isActive: boolean
 }

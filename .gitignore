@@ -6,3 +6,4 @@ backend/dist-scrape/
 **/.env.local
 **/coverage/
 chromium_cli/
+backups/

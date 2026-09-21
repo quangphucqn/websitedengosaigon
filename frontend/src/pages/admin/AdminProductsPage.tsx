@@ -4,10 +4,12 @@ import { Link } from 'react-router-dom'
 import { api } from '../../api/client'
 import { ErrorMessage, Loading } from '../../components/Loading'
 import { Pagination } from '../../components/Pagination'
-import { categoryLabel, formatMoney } from '../../lib/format'
+import { useCategories } from '../../lib/categories'
+import { formatMoney } from '../../lib/format'
 import type { PaginatedResponse, Product } from '../../types'
 
 export function AdminProductsPage() {
+  const { labelFor } = useCategories()
   const [data, setData] = useState<PaginatedResponse<Product> | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
@@ -58,7 +60,7 @@ export function AdminProductsPage() {
                       </div>
                     </div>
                   </td>
-                  <td>{categoryLabel[product.category]}</td>
+                  <td>{labelFor(product.category)}</td>
                   <td>{formatMoney(product.price)}</td>
                   <td>{product.stock}</td>
                   <td><span className="tag">{product.isPublished ? 'Đang hiển thị' : 'Đang ẩn'}</span></td>

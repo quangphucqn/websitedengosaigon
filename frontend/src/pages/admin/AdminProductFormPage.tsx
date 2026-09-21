@@ -7,13 +7,13 @@ import { api, uploadImage } from '../../api/client'
 import { FileInput, ImagePreviewGrid } from '../../components/FileInput'
 import { ErrorMessage } from '../../components/Loading'
 import { useCategories } from '../../lib/categories'
-import type { Product, ProductCategory } from '../../types'
+import type { Product } from '../../types'
 
 const schema = z.object({
   name: z.string().trim().min(2, 'Tên tối thiểu 2 ký tự.'),
   description: z.string().trim().min(10, 'Mô tả tối thiểu 10 ký tự.'),
   price: z.coerce.number().int().min(0),
-  category: z.enum(['den-ban', 'den-treo', 'den-dung', 'den-ngu']),
+  category: z.string().trim().min(2).regex(/^[a-z0-9-]+$/, 'Slug loại đèn không hợp lệ.'),
   stock: z.coerce.number().int().min(0),
   isFeatured: z.boolean(),
   isPublished: z.boolean(),
@@ -61,7 +61,7 @@ export function AdminProductFormPage() {
 
   const submit = async (values: FormInput) => {
     setError('')
-    const payload = { ...values, images, category: values.category as ProductCategory }
+    const payload = { ...values, images }
     try {
       if (isEdit && id) await api(`/products/${id}`, { method: 'PATCH', body: JSON.stringify(payload) })
       else await api('/products', { method: 'POST', body: JSON.stringify(payload) })
@@ -82,13 +82,8 @@ export function AdminProductFormPage() {
           <label>Tồn kho<input type="number" {...register('stock')} /></label>
           <label>Loại đèn
             <select {...register('category')}>
-              {(categories.length > 0 ? categories : [
-                { slug: 'den-ban', name: 'Đèn bàn' },
-                { slug: 'den-treo', name: 'Đèn treo' },
-                { slug: 'den-dung', name: 'Đèn đứng' },
-                { slug: 'den-ngu', name: 'Đèn ngủ' },
-              ] as { slug: ProductCategory; name: string }[]).map((cat) => (
-                <option key={cat.slug} value={cat.slug}>{cat.name}</option>
+              {categories.map((cat) => (
+                <option key={cat._id} value={cat.slug}>{cat.name}</option>
               ))}
             </select>
           </label>

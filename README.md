@@ -125,6 +125,159 @@ SMTP_SECURE=false
 
 Khi `SEED_DEMO=true`, backend tạo một banner, bốn sản phẩm và một bài viết demo **nếu collection sản phẩm đang trống**. Ảnh demo sử dụng URL Unsplash. Đặt `SEED_DEMO=false` để tắt.
 
+## Deploy VPS bằng Docker Compose
+
+Mô hình production dùng một domain duy nhất: Caddy nhận HTTP/HTTPS ở cổng `80`/`443`, chuyển `/api/*` vào backend NestJS và chuyển các route còn lại vào frontend Nginx. Frontend build với `VITE_API_URL=/api`, nên trình duyệt không gọi trực tiếp cổng backend. MongoDB chạy cùng Docker Compose trên VPS (service `mongo`), chỉ lắng nghe trong mạng nội bộ — không mở cổng `27017` ra internet.
+
+### 1. Chuẩn bị DNS và VPS
+
+Trỏ bản ghi `A` của domain về IP VPS:
+
+```text
+@     A     <VPS_IP>
+www   A     <VPS_IP>
+```
+
+Trên VPS Ubuntu/Debian, cài Docker:
+
+```bash
+sudo apt update
+sudo apt install -y ca-certificates curl git
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/keyrings/docker.asc >/dev/null
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo usermod -aG docker $USER
+```
+
+Đăng xuất rồi SSH lại để quyền `docker` có hiệu lực.
+
+### 2. Clone source và tạo file môi trường production
+
+```bash
+mkdir -p ~/apps
+cd ~/apps
+git clone git@github.com:quangphucqn/websitedengosaigon.git dengosaigon
+cd dengosaigon
+cp .env.example .env
+nano .env
+```
+
+Cập nhật `.env` trên VPS bằng giá trị thật. `MONGO_INITDB_ROOT_PASSWORD` và mật khẩu trong `MONGODB_URI` phải giống nhau. Host trong URI là `mongo` (tên service Docker), không phải `localhost`.
+
+```env
+DOMAIN=your-domain.com
+MONGO_INITDB_ROOT_USERNAME=dengosaigon
+MONGO_INITDB_ROOT_PASSWORD=mat-khau-mongo-manh
+MONGO_INITDB_DATABASE=den-go-sai-gon
+MONGODB_URI=mongodb://dengosaigon:mat-khau-mongo-manh@mongo:27017/den-go-sai-gon?authSource=admin
+JWT_SECRET=chuoi-random-rat-dai
+FRONTEND_URL=https://your-domain.com
+ADMIN_EMAIL=admin@your-domain.com
+ADMIN_PASSWORD=mat-khau-admin-manh
+ADMIN_EMAIL_TO=admin@your-domain.com
+SEED_DEMO=false
+```
+
+Nếu mật khẩu Mongo có ký tự đặc biệt (`@`, `:`, `/`, `#`, `%`), encode URL trong `MONGODB_URI`. Không commit file `.env`; file này chỉ nằm trên VPS.
+
+### 3. Chạy lần đầu trên VPS
+
+```bash
+cd ~/apps/dengosaigon
+docker compose up -d --build
+```
+
+Lần đầu Mongo cần vài chục giây để khởi tạo user. Kiểm tra:
+
+```bash
+docker compose ps
+curl -fsS https://your-domain.com/api/health
+docker compose logs -f mongo backend
+```
+
+Admin production vào tại:
+
+```text
+https://your-domain.com/admin
+```
+
+### 4. Tạo script deploy trên VPS
+
+Script trong repo là `scripts/deploy.sh`. Tạo wrapper để GitHub Actions gọi cố định:
+
+```bash
+mkdir -p ~/bin
+cat > ~/bin/deploy-dengosaigon <<'EOF'
+#!/usr/bin/env bash
+set -Eeuo pipefail
+cd "$HOME/apps/dengosaigon"
+./scripts/deploy.sh
+EOF
+chmod +x ~/bin/deploy-dengosaigon
+```
+
+Script sẽ `git fetch`, reset về `origin/main`, build lại Docker image, chạy `docker compose up -d --build --remove-orphans` và kiểm tra `GET /api/health` trong container backend.
+
+### 5. Cấu hình CI/CD GitHub Actions
+
+Workflow `.github/workflows/deploy-production.yml` chạy khi push vào `main` hoặc bấm `workflow_dispatch` thủ công. Job `verify` build backend/frontend trước; nếu build lỗi thì không deploy.
+
+Tạo SSH key riêng cho deploy trên máy cá nhân:
+
+```bash
+ssh-keygen -t ed25519 -C "github-actions-dengosaigon" -f ~/.ssh/dengosaigon_actions
+```
+
+Thêm public key vào VPS:
+
+```bash
+ssh-copy-id -i ~/.ssh/dengosaigon_actions.pub <vps-user>@<vps-ip>
+```
+
+Lấy host key VPS để chống MITM:
+
+```bash
+ssh-keyscan -p 22 <vps-ip>
+```
+
+Vào GitHub repository → **Settings → Secrets and variables → Actions → New repository secret**, thêm:
+
+```text
+VPS_HOST=<vps-ip-hoac-domain>
+VPS_PORT=22
+VPS_USER=<vps-user>
+VPS_SSH_PRIVATE_KEY=<noi-dung-file-~/.ssh/dengosaigon_actions>
+VPS_KNOWN_HOSTS=<ket-qua-ssh-keyscan>
+```
+
+Sau đó mỗi lần push lên `main`, GitHub Actions sẽ SSH vào VPS và chạy `~/bin/deploy-dengosaigon`.
+
+### 6. Rollback nhanh
+
+Nếu bản mới lỗi, SSH vào VPS và quay về commit trước:
+
+```bash
+cd ~/apps/dengosaigon
+git log --oneline -5
+git reset --hard <commit-cu>
+docker compose up -d --build --remove-orphans
+```
+
+Volume `mongo_data` giữ nguyên khi rebuild app. Không chạy `docker compose down -v` trừ khi cố ý xóa database.
+
+Backup Mongo trên VPS:
+
+```bash
+docker compose exec -T mongo mongodump \
+  -u "$MONGO_INITDB_ROOT_USERNAME" \
+  -p "$MONGO_INITDB_ROOT_PASSWORD" \
+  --authenticationDatabase admin \
+  --archive > ~/mongo-backup-$(date +%F).archive
+```
+
 ## Lệnh kiểm tra
 
 ```bash

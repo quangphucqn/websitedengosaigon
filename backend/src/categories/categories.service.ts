@@ -23,6 +23,10 @@ export class CategoriesService {
       .lean();
   }
 
+  async existsActiveSlug(slug: string) {
+    return Boolean(await this.categoryModel.exists({ slug, isActive: true }));
+  }
+
   async findById(id: string) {
     const category = await this.categoryModel.findById(id);
     if (!category) {

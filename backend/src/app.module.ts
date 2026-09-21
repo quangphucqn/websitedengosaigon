@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { BannersModule } from './banners/banners.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ContactModule } from './contact/contact.module';
+import { IntroSlidesModule } from './intro-slides/intro-slides.module';
 import { JwtAuthGuard } from './common/jwt-auth.guard';
 import { MailModule } from './mail/mail.module';
 import { OrdersModule } from './orders/orders.module';
@@ -37,6 +38,7 @@ import { UploadsModule } from './uploads/uploads.module';
     ProductsModule,
     CategoriesModule,
     BannersModule,
+    IntroSlidesModule,
     ContactModule,
     OrdersModule,
     PostsModule,

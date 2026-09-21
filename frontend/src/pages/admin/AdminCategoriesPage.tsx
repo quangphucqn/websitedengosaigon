@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { api } from '../../api/client'
 import { ErrorMessage, Loading } from '../../components/Loading'
-import { slugify } from '../../lib/categories'
+import { slugify, useCategories } from '../../lib/categories'
 import type { Category } from '../../types'
 
 const schema = z.object({
@@ -19,6 +19,7 @@ const schema = z.object({
 type FormInput = z.infer<typeof schema>
 
 export function AdminCategoriesPage() {
+  const { reload: reloadPublic } = useCategories()
   const [categories, setCategories] = useState<Category[]>([])
   const [editing, setEditing] = useState<Category | null>(null)
   const [error, setError] = useState('')
@@ -72,6 +73,7 @@ export function AdminCategoriesPage() {
       }
       cancelEdit()
       load()
+      reloadPublic()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể lưu loại đèn.')
     }
@@ -82,6 +84,7 @@ export function AdminCategoriesPage() {
     try {
       await api(`/categories/${category._id}`, { method: 'DELETE' })
       setCategories((list) => list.filter((c) => c._id !== category._id))
+      reloadPublic()
       if (editing?._id === category._id) cancelEdit()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể xóa loại đèn.')

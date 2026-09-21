@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { PRODUCT_CATEGORIES } from './product.schema';
+
+const categorySlug = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(2)
+  .max(60)
+  .regex(/^[a-z0-9-]+$/, 'Slug loại đèn không hợp lệ.');
 
 const productBody = z.object({
   name: z.string().trim().min(2, 'Tên tối thiểu 2 ký tự.').max(120),
@@ -9,7 +16,7 @@ const productBody = z.object({
     .array(z.string().url('Ảnh phải là URL hợp lệ.'))
     .max(10)
     .default([]),
-  category: z.enum(PRODUCT_CATEGORIES),
+  category: categorySlug,
   stock: z.coerce.number().int().min(0).default(0),
   isFeatured: z.coerce.boolean().optional().default(false),
   isPublished: z.coerce.boolean().optional().default(true),
@@ -20,7 +27,7 @@ export const updateProductSchema = productBody.partial();
 
 export const productQuerySchema = z.object({
   search: z.string().trim().optional(),
-  category: z.enum(PRODUCT_CATEGORIES).optional(),
+  category: categorySlug.optional(),
   sort: z
     .enum(['newest', 'price_asc', 'price_desc'])
     .optional()

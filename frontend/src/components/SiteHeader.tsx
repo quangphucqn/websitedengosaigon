@@ -2,20 +2,14 @@ import { ChevronDown, Menu, ShoppingBag, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { useCartStore } from '../store/cart'
-import { categoryLabel } from '../lib/format'
-import { PRODUCT_CATEGORIES } from '../types'
+import { useCategories } from '../lib/categories'
 import { Logo } from './Logo'
-
-const PRODUCT_CATEGORY_ITEMS = PRODUCT_CATEGORIES.map((value) => ({
-  value,
-  label: categoryLabel[value],
-  to: `/san-pham?category=${value}`,
-}))
 
 export function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [productOpen, setProductOpen] = useState(false)
   const closeTimer = useRef<number | null>(null)
+  const { categories } = useCategories()
   const count = useCartStore((state) =>
     state.items.reduce((sum, item) => sum + item.quantity, 0),
   )
@@ -81,10 +75,10 @@ export function SiteHeader() {
               >
                 Tất cả sản phẩm
               </Link>
-              {PRODUCT_CATEGORY_ITEMS.map((item) => (
+              {categories.map((category) => (
                 <Link
-                  key={item.value}
-                  to={item.to}
+                  key={category._id}
+                  to={`/san-pham?category=${category.slug}`}
                   className="nav-dropdown-link"
                   role="menuitem"
                   onClick={() => {
@@ -92,7 +86,7 @@ export function SiteHeader() {
                     setProductOpen(false)
                   }}
                 >
-                  {item.label}
+                  {category.name}
                 </Link>
               ))}
             </div>

@@ -12,6 +12,7 @@ import { ProductListPage } from './pages/ProductListPage'
 import { AdminBannersPage } from './pages/admin/AdminBannersPage'
 import { AdminCategoriesPage } from './pages/admin/AdminCategoriesPage'
 import { AdminContactPage } from './pages/admin/AdminContactPage'
+import { AdminIntroSlidesPage } from './pages/admin/AdminIntroSlidesPage'
 import { AdminLayout } from './pages/admin/AdminLayout'
 import { AdminOrdersPage } from './pages/admin/AdminOrdersPage'
 import { AdminPostFormPage } from './pages/admin/AdminPostFormPage'
@@ -41,6 +42,7 @@ export default function App() {
       <Route path="san-pham/:id" element={<AdminProductFormPage />} />
       <Route path="danh-muc" element={<AdminCategoriesPage />} />
       <Route path="banner" element={<AdminBannersPage />} />
+      <Route path="gioi-thieu" element={<AdminIntroSlidesPage />} />
       <Route path="bai-viet" element={<AdminPostsPage />} />
       <Route path="bai-viet/moi" element={<AdminPostFormPage />} />
       <Route path="bai-viet/:id" element={<AdminPostFormPage />} />
