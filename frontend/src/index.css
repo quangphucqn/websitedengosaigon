@@ -230,7 +230,7 @@ p { line-height: 1.65; }
 .section-heading { align-items: end; display: flex; justify-content: space-between; margin-bottom: 42px; }
 .section-heading h2 { margin: 0; }
 .featured-grid { display: grid; gap: 22px; grid-template-columns: repeat(3, 1fr); max-width: 1040px; }
-.product-card { min-width: 0; }
+.product-card { display: flex; flex-direction: column; height: 100%; min-width: 0; }
 .product-image { background: var(--limestone); display: block; overflow: hidden; position: relative; }
 .product-image img { aspect-ratio: 4 / 5; height: 100%; object-fit: cover; transition: transform .38s ease; width: 100%; }
 .product-card { min-width: 0; }
@@ -255,9 +255,10 @@ p { line-height: 1.65; }
   .hero-dots button::after, .intro-dots button::after { transition: none !important; }
 }
 .sold-out { background: var(--porcelain); bottom: 10px; color: var(--walnut); font-size: .7rem; font-weight: 700; padding: 7px 9px; position: absolute; right: 10px; }
-.product-copy { padding-top: 16px; }
-.product-copy h3 { font-family: 'Quicksand', sans-serif; font-size: 1.32rem; font-weight: 700; letter-spacing: -.01em; margin: 0 0 6px; }
+.product-copy { display: flex; flex: 1; flex-direction: column; padding-top: 16px; }
+.product-copy h3 { -webkit-box-orient: vertical; display: -webkit-box; font-family: 'Quicksand', sans-serif; font-size: 1.32rem; font-weight: 700; letter-spacing: -.01em; line-height: 1.25; margin: 0 0 6px; min-height: 2.5em; overflow: hidden; -webkit-line-clamp: 2; }
 .product-copy > p { color: var(--chestnut); font-size: .84rem; font-weight: 700; margin-bottom: 13px; }
+.product-copy .icon-text-button { margin-top: auto; }
 .category-strip { background: var(--limestone); padding: 68px 0; }
 .category-links { border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
 .category-links a { align-items: center; border-right: 1px solid var(--line); display: flex; font-family: 'Quicksand', sans-serif; font-size: clamp(1.3rem, 2.5vw, 2rem); font-weight: 600; justify-content: space-between; padding: 24px 17px 3px 0; }
@@ -367,6 +368,8 @@ textarea { resize: vertical; }
 .article-content p { margin-bottom: 20px; }
 .article-content img { height: auto; margin: 28px 0; width: 100%; }
 .article-content a { color: var(--chestnut); text-decoration: underline; }
+.article-related { margin-top: 70px; }
+.article-related .section-heading h2 { font-size: clamp(1.7rem, 3vw, 2.2rem); }
 
 /* Admin */
 .admin-login { align-items: center; background: linear-gradient(140deg, var(--limestone), var(--porcelain)); display: flex; flex-direction: column; justify-content: center; min-height: 100vh; padding: 28px; }
