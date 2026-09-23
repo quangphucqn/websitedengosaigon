@@ -1,5 +1,4 @@
-# DOMAIN is read from the production .env file.
-{$DOMAIN:example.com} {
+denthucong.site, www.denthucong.site {
   encode zstd gzip
 
   handle /api/* {

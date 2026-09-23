@@ -51,7 +51,7 @@ services:
   caddy:
     image: caddy:2-alpine
     environment:
-      DOMAIN: ${DOMAIN:-example.com}
+      DOMAIN: ${DOMAIN:-denthucong.site}
     depends_on:
       - backend
       - frontend
