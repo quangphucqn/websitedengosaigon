@@ -3,16 +3,18 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { api } from '../api/client'
 import { ErrorMessage, Loading } from '../components/Loading'
+import { ProductCard } from '../components/ProductCard'
 import { Seo } from '../components/Seo'
 import { useCategories } from '../lib/categories'
 import { formatMoney } from '../lib/format'
 import { useCartStore } from '../store/cart'
-import type { Product } from '../types'
+import type { PaginatedResponse, Product } from '../types'
 
 export function ProductDetailPage() {
   const { slug = '' } = useParams()
   const { labelFor } = useCategories()
   const [product, setProduct] = useState<Product | null>(null)
+  const [related, setRelated] = useState<Product[]>([])
   const [activeImage, setActiveImage] = useState(0)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
@@ -20,12 +22,42 @@ export function ProductDetailPage() {
   const [added, setAdded] = useState(false)
 
   useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setError('')
+    setActiveImage(0)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+
     api<Product>(`/products/${slug}`)
-      .then(setProduct)
-      .catch((err: unknown) =>
-        setError(err instanceof Error ? err.message : 'Không thể tải sản phẩm.'),
-      )
-      .finally(() => setLoading(false))
+      .then((loadedProduct) => {
+        if (cancelled) return
+        setProduct(loadedProduct)
+
+        // Fetch related products in same category
+        api<PaginatedResponse<Product>>(
+          `/products?category=${encodeURIComponent(loadedProduct.category)}&limit=8`,
+        )
+          .then((res) => {
+            if (!cancelled) {
+              setRelated(res.items.filter((item) => item.slug !== slug).slice(0, 4))
+            }
+          })
+          .catch(() => {
+            if (!cancelled) setRelated([])
+          })
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Không thể tải sản phẩm.')
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
   }, [slug])
 
   if (loading) return <Loading />
@@ -56,6 +88,7 @@ export function ProductDetailPage() {
     '@graph': [
       {
         '@type': 'Product',
+        inLanguage: 'vi-VN',
         name: product.name,
         image: product.images,
         description: product.description,
@@ -180,6 +213,32 @@ export function ProductDetailPage() {
           <p className="shipping-note">Giao hàng nội thành 2–4 ngày · Đóng gói cẩn thận</p>
         </section>
       </div>
+
+      {/* Related Products in Same Category */}
+      {related.length > 0 && (
+        <section
+          className="related-products-section"
+          aria-labelledby="related-products-heading"
+        >
+          <header className="section-heading">
+            <div>
+              <p className="side-label">Gợi ý từ xưởng</p>
+              <h2 id="related-products-heading">Sản phẩm cùng loại</h2>
+            </div>
+            <Link
+              className="text-link"
+              to={`/san-pham?category=${encodeURIComponent(product.category)}`}
+            >
+              Xem thêm {categoryName.toLowerCase()}
+            </Link>
+          </header>
+          <div className="product-grid">
+            {related.map((item) => (
+              <ProductCard key={item._id} product={item} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }

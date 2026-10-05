@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 import { ErrorMessage, Loading } from '../components/Loading'
 import { ProductCard } from '../components/ProductCard'
-import { Reveal, RevealStagger } from '../components/Reveal'
+import { Reveal } from '../components/Reveal'
 import { Seo } from '../components/Seo'
 import { useCategories } from '../lib/categories'
 import type { Banner, IntroSlide, PaginatedResponse, Post, Product } from '../types'
@@ -16,7 +17,10 @@ function Hero({ banners }: { banners: Banner[] }) {
 
   useEffect(() => {
     if (banners.length < 2) return
-    const timer = window.setInterval(() => setActive((index) => (index + 1) % banners.length), 5000)
+    const timer = window.setInterval(
+      () => setActive((index) => (index + 1) % banners.length),
+      5000,
+    )
     return () => window.clearInterval(timer)
   }, [banners.length])
 
@@ -54,7 +58,10 @@ function Hero({ banners }: { banners: Banner[] }) {
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={(event) => finishSwipe(event.clientX, event.clientY)}
-      onPointerCancel={() => { touchStart.current = null; dragDelta.current = 0 }}
+      onPointerCancel={() => {
+        touchStart.current = null
+        dragDelta.current = 0
+      }}
     >
       {hasBanners ? (
         <>
@@ -69,7 +76,9 @@ function Hero({ banners }: { banners: Banner[] }) {
           <div className="shell hero-copy">
             <p className="hero-kicker">Đèn gỗ làm thủ công</p>
             <h1>{banner.title || 'Ánh sáng được làm để ở lại cùng không gian sống.'}</h1>
-            <Link className="button button-light" to={banner.link || '/san-pham'}>Khám phá bộ sưu tập</Link>
+            <Link className="button button-light" to={banner.link || '/san-pham'}>
+              Khám phá bộ sưu tập
+            </Link>
           </div>
           {banners.length > 1 && (
             <div className="hero-controls shell">
@@ -93,7 +102,9 @@ function Hero({ banners }: { banners: Banner[] }) {
           <div className="shell hero-copy">
             <p className="hero-kicker">Đèn gỗ làm thủ công</p>
             <h1>Ánh sáng được làm để ở lại cùng không gian sống.</h1>
-            <Link className="button button-light" to="/san-pham">Khám phá bộ sưu tập</Link>
+            <Link className="button button-light" to="/san-pham">
+              Khám phá bộ sưu tập
+            </Link>
           </div>
         </div>
       )}
@@ -118,7 +129,10 @@ function IntroSlider({ slides }: { slides: IntroSlide[] }) {
 
   useEffect(() => {
     if (items.length < 2 || paused) return
-    const timer = window.setInterval(() => setActive((index) => (index + 1) % items.length), 5000)
+    const timer = window.setInterval(
+      () => setActive((index) => (index + 1) % items.length),
+      5000,
+    )
     return () => window.clearInterval(timer)
   }, [items.length, paused])
 
@@ -150,7 +164,9 @@ function IntroSlider({ slides }: { slides: IntroSlide[] }) {
         ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
       }}
       onPointerUp={(event) => finishSwipe(event.clientX, event.clientY)}
-      onPointerCancel={() => { touchStart.current = null }}
+      onPointerCancel={() => {
+        touchStart.current = null
+      }}
       onKeyDown={(event) => {
         if (event.key === 'ArrowLeft') goTo(active - 1)
         if (event.key === 'ArrowRight') goTo(active + 1)
@@ -195,12 +211,34 @@ export function HomePage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
 
+  const featuredRef = useRef<HTMLDivElement>(null)
+  const postsRef = useRef<HTMLDivElement>(null)
+  const [featuredScroll, setFeaturedScroll] = useState({ canLeft: false, canRight: false })
+  const [postsScroll, setPostsScroll] = useState({ canLeft: false, canRight: false })
+
+  const updateScrollState = useCallback(() => {
+    if (featuredRef.current) {
+      const el = featuredRef.current
+      setFeaturedScroll({
+        canLeft: el.scrollLeft > 6,
+        canRight: el.scrollLeft + el.clientWidth < el.scrollWidth - 6,
+      })
+    }
+    if (postsRef.current) {
+      const el = postsRef.current
+      setPostsScroll({
+        canLeft: el.scrollLeft > 6,
+        canRight: el.scrollLeft + el.clientWidth < el.scrollWidth - 6,
+      })
+    }
+  }, [])
+
   useEffect(() => {
     Promise.all([
       api<Banner[]>('/banners'),
       api<IntroSlide[]>('/intro-slides'),
-      api<PaginatedResponse<Product>>('/products?featured=true&limit=3'),
-      api<PaginatedResponse<Post>>('/posts?limit=2'),
+      api<PaginatedResponse<Product>>('/products?featured=true&limit=8'),
+      api<PaginatedResponse<Post>>('/posts?limit=6'),
     ])
       .then(([loadedBanners, loadedIntroSlides, loadedFeatured, loadedPosts]) => {
         setBanners(loadedBanners)
@@ -208,12 +246,47 @@ export function HomePage() {
         setFeatured(loadedFeatured.items)
         setPosts(loadedPosts.items)
       })
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : 'Không thể tải trang chủ.'))
+      .catch((err: unknown) =>
+        setError(err instanceof Error ? err.message : 'Không thể tải trang chủ.'),
+      )
       .finally(() => setLoading(false))
   }, [])
 
+  useEffect(() => {
+    const fEl = featuredRef.current
+    const pEl = postsRef.current
+
+    updateScrollState()
+
+    fEl?.addEventListener('scroll', updateScrollState, { passive: true })
+    pEl?.addEventListener('scroll', updateScrollState, { passive: true })
+    window.addEventListener('resize', updateScrollState)
+
+    return () => {
+      fEl?.removeEventListener('scroll', updateScrollState)
+      pEl?.removeEventListener('scroll', updateScrollState)
+      window.removeEventListener('resize', updateScrollState)
+    }
+  }, [featured.length, posts.length, updateScrollState])
+
+  const scrollSlider = (ref: React.RefObject<HTMLDivElement | null>, direction: 'left' | 'right') => {
+    if (!ref.current) return
+    const firstChild = ref.current.firstElementChild as HTMLElement | null
+    const amount = firstChild ? firstChild.offsetWidth + 22 : 320
+    ref.current.scrollBy({
+      left: direction === 'left' ? -amount : amount,
+      behavior: 'smooth',
+    })
+  }
+
   if (loading) return <Loading label="Đang thắp sáng không gian…" />
-  if (error) return <div className="shell page-space"><ErrorMessage message={error} /></div>
+  if (error) {
+    return (
+      <div className="shell page-space">
+        <ErrorMessage message={error} />
+      </div>
+    )
+  }
 
   return (
     <>
@@ -226,10 +299,61 @@ export function HomePage() {
       <Reveal as="div" className="home-intro-reveal">
         <IntroSlider slides={introSlides} />
       </Reveal>
+
+      {/* Featured Products Slider */}
       <Reveal as="section" className="shell section-space featured-section">
-        <div className="section-heading"><div><p className="side-label">Được chọn nhiều</p><h2>Những nguồn sáng nổi bật</h2></div><Link className="text-link" to="/san-pham">Xem tất cả</Link></div>
-        {featured.length ? <RevealStagger className="featured-grid">{featured.map((product) => <ProductCard key={product._id} product={product} featured />)}</RevealStagger> : <p>Những sản phẩm đầu tiên đang được hoàn thiện.</p>}
+        <div className="section-heading">
+          <div>
+            <p className="side-label">Được chọn nhiều</p>
+            <h2>Những nguồn sáng nổi bật</h2>
+          </div>
+          <div className="section-heading-actions">
+            <Link className="text-link" to="/san-pham">
+              Xem tất cả
+            </Link>
+            {featured.length > 2 && (
+              <div className="slider-nav-buttons" role="group" aria-label="Điều hướng sản phẩm">
+                <button
+                  type="button"
+                  className="slider-nav-btn"
+                  onClick={() => scrollSlider(featuredRef, 'left')}
+                  disabled={!featuredScroll.canLeft}
+                  aria-label="Xem sản phẩm trước"
+                >
+                  <ChevronLeft size={18} aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  className="slider-nav-btn"
+                  onClick={() => scrollSlider(featuredRef, 'right')}
+                  disabled={!featuredScroll.canRight}
+                  aria-label="Xem sản phẩm tiếp theo"
+                >
+                  <ChevronRight size={18} aria-hidden="true" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {featured.length ? (
+          <div
+            ref={featuredRef}
+            className="home-slider-track"
+            tabIndex={0}
+            aria-label="Dải sản phẩm nổi bật"
+          >
+            {featured.map((product) => (
+              <div className="home-slider-item-product" key={product._id}>
+                <ProductCard product={product} featured />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p>Những sản phẩm đầu tiên đang được hoàn thiện.</p>
+        )}
       </Reveal>
+
       {categories.length > 0 && (
         <Reveal as="section" className="category-strip">
           <div className="shell">
@@ -244,27 +368,69 @@ export function HomePage() {
           </div>
         </Reveal>
       )}
+
+      {/* Journal / Articles Slider */}
       <Reveal as="section" className="shell section-space journal-section">
-        <div className="section-heading"><div><p className="side-label">Góc kể chuyện</p><h2>Ánh sáng trong nhà</h2></div><Link className="text-link" to="/bai-viet">Đọc tất cả</Link></div>
-        <div className="post-grid">
-          {posts.map((post) => (
-            <Link className="post-preview" key={post._id} to={`/bai-viet/${post.slug}`}>
-              <div className="post-image">
-                {post.coverImage && (
-                  <img
-                    src={post.coverImage}
-                    alt={post.title}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                )}
-              </div>
-              <div>
-                <p>{new Date(post.createdAt).toLocaleDateString('vi-VN')}</p>
-                <h3>{post.title}</h3>
-                <span>Đọc bài viết</span>
-              </div>
+        <div className="section-heading">
+          <div>
+            <p className="side-label">Góc kể chuyện</p>
+            <h2>Ánh sáng trong nhà</h2>
+          </div>
+          <div className="section-heading-actions">
+            <Link className="text-link" to="/bai-viet">
+              Đọc tất cả
             </Link>
+            {posts.length > 2 && (
+              <div className="slider-nav-buttons" role="group" aria-label="Điều hướng bài viết">
+                <button
+                  type="button"
+                  className="slider-nav-btn"
+                  onClick={() => scrollSlider(postsRef, 'left')}
+                  disabled={!postsScroll.canLeft}
+                  aria-label="Xem bài viết trước"
+                >
+                  <ChevronLeft size={18} aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  className="slider-nav-btn"
+                  onClick={() => scrollSlider(postsRef, 'right')}
+                  disabled={!postsScroll.canRight}
+                  aria-label="Xem bài viết tiếp theo"
+                >
+                  <ChevronRight size={18} aria-hidden="true" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div
+          ref={postsRef}
+          className="home-slider-track"
+          tabIndex={0}
+          aria-label="Dải bài viết mới"
+        >
+          {posts.map((post) => (
+            <div className="home-slider-item-post" key={post._id}>
+              <Link className="post-preview" to={`/bai-viet/${post.slug}`}>
+                <div className="post-image">
+                  {post.coverImage && (
+                    <img
+                      src={post.coverImage}
+                      alt={post.title}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  )}
+                </div>
+                <div>
+                  <p>{new Date(post.createdAt).toLocaleDateString('vi-VN')}</p>
+                  <h3>{post.title}</h3>
+                  <span>Đọc bài viết</span>
+                </div>
+              </Link>
+            </div>
           ))}
         </div>
       </Reveal>

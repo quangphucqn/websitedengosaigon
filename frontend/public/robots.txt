@@ -7,4 +7,40 @@ Disallow: /thanh-toan
 Disallow: /dat-hang-thanh-cong
 Disallow: /api/
 
+# Generative Engine Optimization (GEO) — Allow AI Search Crawlers for Citations
+User-agent: GPTBot
+Allow: /
+Disallow: /admin
+Disallow: /gio-hang
+Disallow: /thanh-toan
+Disallow: /api/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /admin
+Disallow: /gio-hang
+Disallow: /thanh-toan
+Disallow: /api/
+
+User-agent: Claude-Web
+Allow: /
+Disallow: /admin
+Disallow: /gio-hang
+Disallow: /thanh-toan
+Disallow: /api/
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /admin
+Disallow: /gio-hang
+Disallow: /thanh-toan
+Disallow: /api/
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /admin
+Disallow: /gio-hang
+Disallow: /thanh-toan
+Disallow: /api/
+
 Sitemap: https://denthucong.site/sitemap.xml
