@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /gio-hang
+Disallow: /thanh-toan
+Disallow: /dat-hang-thanh-cong
+Disallow: /api/
+
+Sitemap: https://denthucong.site/sitemap.xml

@@ -4,6 +4,7 @@ import { api } from '../api/client'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorMessage, Loading } from '../components/Loading'
 import { Pagination } from '../components/Pagination'
+import { Seo } from '../components/Seo'
 import type { PaginatedResponse, Post } from '../types'
 
 export function BlogListPage() {
@@ -17,7 +18,9 @@ export function BlogListPage() {
     setLoading(true)
     api<PaginatedResponse<Post>>(`/posts?page=${page}&limit=9`)
       .then(setData)
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : 'Không thể tải bài viết.'))
+      .catch((err: unknown) =>
+        setError(err instanceof Error ? err.message : 'Không thể tải bài viết.'),
+      )
       .finally(() => setLoading(false))
   }, [page])
 
@@ -27,18 +30,61 @@ export function BlogListPage() {
     setParams(next)
   }
 
+  const breadcrumbsSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Trang chủ',
+        item: 'https://denthucong.site/',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Góc kể chuyện',
+        item: 'https://denthucong.site/bai-viet',
+      },
+    ],
+  }
+
   if (loading) return <Loading label="Đang tải câu chuyện…" />
-  if (error) return <div className="shell page-space"><ErrorMessage message={error} /></div>
+  if (error) {
+    return (
+      <div className="shell page-space">
+        <ErrorMessage message={error} />
+      </div>
+    )
+  }
   if (!data?.items.length) {
     return (
       <div className="shell page-space">
-        <EmptyState title="Chưa có bài viết" body="Những câu chuyện về ánh sáng sẽ xuất hiện tại đây." />
+        <Seo
+          title="Góc Kể Chuyện — Cảm Hứng Ánh Sáng & Không Gian Gỗ"
+          description="Những ghi chép về chất liệu gỗ, ánh sáng ấm, cách chọn và bài trí đèn gỗ thủ công trong không gian sống."
+          canonical="/bai-viet"
+        />
+        <EmptyState
+          title="Chưa có bài viết"
+          body="Những câu chuyện về ánh sáng sẽ xuất hiện tại đây."
+        />
       </div>
     )
   }
 
   return (
     <div className="shell page-space blog-list-page">
+      <Seo
+        title={
+          page > 1
+            ? `Góc Kể Chuyện — Trang ${page} | Đèn Gỗ Sài Gòn`
+            : 'Góc Kể Chuyện — Cảm Hứng Ánh Sáng & Không Gian Gỗ | Đèn Gỗ Sài Gòn'
+        }
+        description="Những ghi chép và chia sẻ về chất liệu gỗ tự nhiên, nghệ thuật ánh sáng và cách bài trí đèn gỗ thủ công cho ngôi nhà ấm cúng."
+        canonical={page > 1 ? `/bai-viet?page=${page}` : '/bai-viet'}
+        schema={breadcrumbsSchema}
+      />
       <div className="page-title">
         <p className="side-label">Góc kể chuyện</p>
         <h1>Ánh sáng trong nhà</h1>
@@ -48,11 +94,22 @@ export function BlogListPage() {
         {data.items.map((post) => (
           <article className="blog-card" key={post._id}>
             <Link className="blog-cover" to={`/bai-viet/${post.slug}`}>
-              {post.coverImage && <img src={post.coverImage} alt="" />}
+              {post.coverImage && (
+                <img
+                  src={post.coverImage}
+                  alt={post.title}
+                  loading="lazy"
+                  decoding="async"
+                />
+              )}
             </Link>
             <p>{new Date(post.createdAt).toLocaleDateString('vi-VN')}</p>
-            <Link to={`/bai-viet/${post.slug}`}><h2>{post.title}</h2></Link>
-            <Link className="text-link" to={`/bai-viet/${post.slug}`}>Đọc bài viết</Link>
+            <Link to={`/bai-viet/${post.slug}`}>
+              <h2>{post.title}</h2>
+            </Link>
+            <Link className="text-link" to={`/bai-viet/${post.slug}`}>
+              Đọc bài viết
+            </Link>
           </article>
         ))}
       </div>

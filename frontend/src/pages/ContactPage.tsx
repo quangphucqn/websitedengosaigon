@@ -9,6 +9,7 @@ import {
 import { useEffect, useState } from 'react'
 import { api } from '../api/client'
 import { ErrorMessage, Loading } from '../components/Loading'
+import { Seo } from '../components/Seo'
 import { normalizePhoneForTel, normalizeZaloLink } from '../store/contact'
 import type { ContactInfo } from '../types'
 
@@ -32,8 +33,31 @@ export function ContactPage() {
   const tel = normalizePhoneForTel(contact.phone)
   const zaloHref = normalizeZaloLink(contact.zalo)
 
+  const localBusinessSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Store',
+    name: contact.brandName || 'Đèn Gỗ Sài Gòn',
+    url: 'https://denthucong.site/lien-he',
+    telephone: contact.phone,
+    email: contact.email,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: contact.address || '',
+      addressLocality: 'Thành phố Hồ Chí Minh',
+      addressCountry: 'VN',
+    },
+    openingHours: contact.workingHours,
+    sameAs: [contact.facebook, contact.instagram, zaloHref].filter(Boolean),
+  }
+
   return (
     <section className="page-space contact-page">
+      <Seo
+        title="Liên Hệ Xưởng Đèn Gỗ Sài Gòn — Địa Chỉ & Hotline"
+        description="Ghé xưởng trải nghiệm đèn gỗ thủ công hoặc liên hệ đặt hàng theo yêu cầu tại TP.HCM. Hotline, Zalo và địa chỉ chi tiết."
+        canonical="/lien-he"
+        schema={localBusinessSchema}
+      />
       <div className="shell">
         <header className="page-title">
           <p className="side-label">Liên hệ</p>
@@ -106,7 +130,7 @@ export function ContactPage() {
             {contact.mapEmbedUrl ? (
               <iframe
                 src={contact.mapEmbedUrl}
-                title={`Bản đồ ${contact.brandName}`}
+                title={`Bản đồ xưởng ${contact.brandName}`}
                 loading="lazy"
                 allowFullScreen
                 referrerPolicy="no-referrer-when-downgrade"

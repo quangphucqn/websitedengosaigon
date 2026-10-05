@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import { api, setToken } from '../../api/client'
 import { Logo } from '../../components/Logo'
+import { Seo } from '../../components/Seo'
 
 const schema = z.object({
   email: z.string().email('Email không hợp lệ.'),
@@ -31,6 +32,7 @@ export function LoginPage() {
 
   return (
     <div className="admin-login">
+      <Seo title="Đăng Nhập Quản Trị" canonical="/admin/dang-nhap" />
       <Logo />
       <form onSubmit={handleSubmit(submit)} noValidate>
         <p className="side-label">Trang quản trị</p>

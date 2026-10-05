@@ -15,6 +15,7 @@ import { OrdersModule } from './orders/orders.module';
 import { PostsModule } from './posts/posts.module';
 import { ProductsModule } from './products/products.module';
 import { SeedModule } from './seed/seed.module';
+import { SitemapModule } from './sitemap/sitemap.module';
 import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
@@ -45,6 +46,7 @@ import { UploadsModule } from './uploads/uploads.module';
     UploadsModule,
     MailModule,
     SeedModule,
+    SitemapModule,
   ],
   controllers: [AppController],
   providers: [

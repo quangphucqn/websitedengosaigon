@@ -1,6 +1,11 @@
 denthucong.site, www.denthucong.site {
   encode zstd gzip
 
+  handle /sitemap.xml {
+    rewrite * /api/sitemap.xml
+    reverse_proxy backend:3000
+  }
+
   handle /api/* {
     reverse_proxy backend:3000
   }
