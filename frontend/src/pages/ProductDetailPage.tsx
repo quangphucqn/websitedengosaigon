@@ -1,5 +1,5 @@
-import { Check, ChevronLeft, ShoppingBag } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Check, ChevronLeft, ChevronRight, ShoppingBag } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { api } from '../api/client'
 import { ErrorMessage, Loading } from '../components/Loading'
@@ -21,6 +21,19 @@ export function ProductDetailPage() {
   const add = useCartStore((state) => state.add)
   const [added, setAdded] = useState(false)
 
+  const sliderRef = useRef<HTMLDivElement>(null)
+  const [scrollState, setScrollState] = useState({ canLeft: false, canRight: false })
+
+  const updateScrollState = useCallback(() => {
+    if (sliderRef.current) {
+      const el = sliderRef.current
+      setScrollState({
+        canLeft: el.scrollLeft > 6,
+        canRight: el.scrollLeft + el.clientWidth < el.scrollWidth - 6,
+      })
+    }
+  }, [])
+
   useEffect(() => {
     let cancelled = false
     setLoading(true)
@@ -33,13 +46,13 @@ export function ProductDetailPage() {
         if (cancelled) return
         setProduct(loadedProduct)
 
-        // Fetch related products in same category
+        // Fetch related products in same category (up to 8 products for slider)
         api<PaginatedResponse<Product>>(
-          `/products?category=${encodeURIComponent(loadedProduct.category)}&limit=8`,
+          `/products?category=${encodeURIComponent(loadedProduct.category)}&limit=10`,
         )
           .then((res) => {
             if (!cancelled) {
-              setRelated(res.items.filter((item) => item.slug !== slug).slice(0, 4))
+              setRelated(res.items.filter((item) => item.slug !== slug).slice(0, 8))
             }
           })
           .catch(() => {
@@ -59,6 +72,29 @@ export function ProductDetailPage() {
       cancelled = true
     }
   }, [slug])
+
+  useEffect(() => {
+    const el = sliderRef.current
+    updateScrollState()
+
+    el?.addEventListener('scroll', updateScrollState, { passive: true })
+    window.addEventListener('resize', updateScrollState)
+
+    return () => {
+      el?.removeEventListener('scroll', updateScrollState)
+      window.removeEventListener('resize', updateScrollState)
+    }
+  }, [related.length, updateScrollState])
+
+  const scrollSlider = (direction: 'left' | 'right') => {
+    if (!sliderRef.current) return
+    const firstChild = sliderRef.current.firstElementChild as HTMLElement | null
+    const amount = firstChild ? firstChild.offsetWidth + 22 : 320
+    sliderRef.current.scrollBy({
+      left: direction === 'left' ? -amount : amount,
+      behavior: 'smooth',
+    })
+  }
 
   if (loading) return <Loading />
   if (error || !product) {
@@ -214,7 +250,7 @@ export function ProductDetailPage() {
         </section>
       </div>
 
-      {/* Related Products in Same Category */}
+      {/* Related Products Slider in Same Category */}
       {related.length > 0 && (
         <section
           className="related-products-section"
@@ -225,16 +261,51 @@ export function ProductDetailPage() {
               <p className="side-label">Gợi ý từ xưởng</p>
               <h2 id="related-products-heading">Sản phẩm cùng loại</h2>
             </div>
-            <Link
-              className="text-link"
-              to={`/san-pham?category=${encodeURIComponent(product.category)}`}
-            >
-              Xem thêm {categoryName.toLowerCase()}
-            </Link>
+            <div className="section-heading-actions">
+              <Link
+                className="text-link"
+                to={`/san-pham?category=${encodeURIComponent(product.category)}`}
+              >
+                Xem thêm {categoryName.toLowerCase()}
+              </Link>
+              {related.length > 2 && (
+                <div
+                  className="slider-nav-buttons"
+                  role="group"
+                  aria-label="Điều hướng sản phẩm cùng loại"
+                >
+                  <button
+                    type="button"
+                    className="slider-nav-btn"
+                    onClick={() => scrollSlider('left')}
+                    disabled={!scrollState.canLeft}
+                    aria-label="Xem sản phẩm trước"
+                  >
+                    <ChevronLeft size={18} aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    className="slider-nav-btn"
+                    onClick={() => scrollSlider('right')}
+                    disabled={!scrollState.canRight}
+                    aria-label="Xem sản phẩm tiếp theo"
+                  >
+                    <ChevronRight size={18} aria-hidden="true" />
+                  </button>
+                </div>
+              )}
+            </div>
           </header>
-          <div className="product-grid">
+          <div
+            ref={sliderRef}
+            className="home-slider-track"
+            tabIndex={0}
+            aria-label="Dải sản phẩm cùng loại"
+          >
             {related.map((item) => (
-              <ProductCard key={item._id} product={item} />
+              <div className="home-slider-item-product" key={item._id}>
+                <ProductCard product={item} />
+              </div>
             ))}
           </div>
         </section>
